@@ -132,7 +132,7 @@ never used the PA anyway).
 
 Reverse-engineered from the vendor driver with lots of framed-I²C packet
 capturing, disassembly and stubbornness. Similar prior art:
-[`chuwi-corebook-x-left-speaker`](https://github.com/) project for the CoreBook X
+the CoreBook X "left speaker" project project for the CoreBook X
 (different machine, different mechanism, endless inspiration).
 
 ## License
