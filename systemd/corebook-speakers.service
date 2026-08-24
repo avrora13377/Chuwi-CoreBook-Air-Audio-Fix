@@ -1,0 +1,13 @@
+[Unit]
+Description=CoreBook Air Plus internal speaker restore (SN6180 vendor PA bridge)
+Documentation=https://github.com/YOURNAME/corebook-air-plus-audio-fix
+After=multi-user.target sound.target
+Wants=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/corebook-speakers.sh
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target
