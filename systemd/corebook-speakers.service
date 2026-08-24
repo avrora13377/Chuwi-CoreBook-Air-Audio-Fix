@@ -1,6 +1,6 @@
 [Unit]
 Description=CoreBook Air Plus internal speaker restore (SN6180 vendor PA bridge)
-Documentation=https://github.com/YOURNAME/corebook-air-plus-audio-fix
+Documentation=https://github.com/avrora13377/corebook-air-plus-audio-fix
 After=multi-user.target sound.target
 Wants=multi-user.target
 
