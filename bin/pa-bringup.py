@@ -11,6 +11,13 @@ Replicates what the Windows vendor driver (CHDRT64ISST.sys) does at driver load:
 Self-contained: only needs firmware/pa8022_fw.hex next to it.
 Run as root. Exit code 0 = success.
 
+GPIO4 (PA enable) is NOT handled here any more: speaker-restore.sh holds it BEFORE
+running this script. Run this file standalone only if GPIO4 is already high.
+
+Set COREBOOK_WIRE=1 to convert the 'wire format' verb tables (nid in bits 27:20) to
+the hwdep ioctl format (nid in bits 31:24). Without it, the kernel rejects those
+words ('out of range cmd' in dmesg) and they never reach the codec.
+
 See docs/HOW-IT-WORKS.md in this repository for a full protocol explanation.
 """
 import os, re, sys, time, struct, fcntl
@@ -27,13 +34,15 @@ def find_hwdep():
         if 'SN6180' in head or 'Conexant' in head:
             card = proc.split('/')[3].replace('card', '')
             return f'/dev/snd/hwC{card}D0'
-    return '/dev/snd/hwC1D0'   # sensible default for this machine
+    return None   # never guess: vendor verbs sent to the wrong codec are dangerous
 
 HDA_HWDEP = find_hwdep()
 PVERSION, VERB_WRITE = 0x80044810, 0xC0084811
 
 class Codec:
     def __init__(self):
+        if not HDA_HWDEP:
+            raise FileNotFoundError('Conexant/SN6180 codec not found in /proc/asound')
         self.fd = os.open(HDA_HWDEP, os.O_RDWR)
         fcntl.ioctl(self.fd, PVERSION, struct.pack('I', 1))
     def verb(self, w):
@@ -44,6 +53,15 @@ class Codec:
 
 def verb(nid, vrb, payload):
     return ((nid & 0xFF) << 24) | ((vrb & 0xFFF) << 8) | (payload & 0xFF)
+
+WIRE = os.environ.get('COREBOOK_WIRE', '0') == '1'
+
+def to_ioctl(w):
+    """HDA wire word (nid in bits 27:20) -> hwdep ioctl word (nid in bits 31:24)."""
+    return (((w >> 20) & 0xFF) << 24) | (w & 0xFFFFF)
+
+def wire(w):
+    return to_ioctl(w) if WIRE else w
 
 PAD = 0x000F0000
 V_SEL1, V_SEL2 = 0x520, 0x521     # bridge: select sub/device
@@ -173,7 +191,7 @@ def load_fw():
 
 def oem_preamble(c):
     for w in OVERRIDE_VERBS:
-        c.raw(w)
+        c.raw(wire(w))
     # INF "GpioVerb" section: codec GPIO bit4 writes (codec reports 0 GPIOs,
     # Windows sends them anyway -- so do we).
     c.raw(verb(0x01, 0x716, 0x00)); c.raw(verb(0x01, 0x717, 0x10)); c.raw(verb(0x01, 0x715, 0x10))
@@ -185,27 +203,17 @@ def enable_rmw(c):
 
 def burst(c, words):
     for w in words:
-        c.verb(w)
+        c.verb(wire(w))
 
 # ------------------------------------------------------------------- main ----
 def main():
-    gp = None
-    try:
-        gp = __import__('subprocess').Popen(
-            ['gpioset', '--chip=0', '--daemon', '4=1'],
-            stdout=__import__('subprocess').DEVNULL,
-            stderr=__import__('subprocess').DEVNULL)
-        time.sleep(0.2)
-    except Exception as e:
-        print(f'warn: gpioset failed ({e}) - continuing without GPIO hold', flush=True)
-
     try:
         c = Codec()
-        print(f'using {HDA_HWDEP}', flush=True)
+        print(f'using {HDA_HWDEP} (verb tables: {"wire->ioctl converted" if WIRE else "as-is"})', flush=True)
 
         print('[1/9] codec preamble + engine verbs', flush=True)
         oem_preamble(c); time.sleep(0.3)
-        for w in ENGINE_VERBS: c.raw(w)
+        for w in ENGINE_VERBS: c.raw(wire(w))
 
         print('[2/9] RMW unlock', flush=True)
         enable_rmw(c)
@@ -231,7 +239,7 @@ def main():
             if item == 'MS10':
                 time.sleep(0.01); continue
             r, v = item; fwrite(c, r, v)
-        c.raw(0x1B62C0F); c.raw(0x1B6310F)          # Link A + Link B commits
+        c.raw(wire(0x1B62C0F)); c.raw(wire(0x1B6310F))          # Link A + Link B commits
 
         print('[7/9] power tail', flush=True)
         for item in POWER_TAIL:

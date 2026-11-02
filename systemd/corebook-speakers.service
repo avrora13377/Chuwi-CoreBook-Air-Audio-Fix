@@ -1,13 +1,20 @@
 [Unit]
-Description=CoreBook Air Plus internal speaker restore (SN6180 vendor PA bridge)
-Documentation=https://github.com/avrora13377/corebook-air-plus-audio-fix
-After=multi-user.target sound.target
-Wants=multi-user.target
+Description=CoreBook Air Plus internal speakers: SmartPA bring-up
+Documentation=https://github.com/avrora13377/Chuwi-CoreBook-Air-Audio-Fix
+# NOTE: no After=multi-user.target here. The unit is WantedBy=multi-user.target,
+# so ordering it AFTER that target creates an ordering cycle that systemd
+# resolves by dropping a job.
+After=sound.target
 
 [Service]
 Type=oneshot
+# RemainAfterExit=yes + KillMode=process: the gpioset daemon that holds GPIO4
+# must NOT be killed by systemd's cgroup cleanup when the script exits.
+RemainAfterExit=yes
+KillMode=process
+TimeoutStartSec=180
+EnvironmentFile=-/etc/default/corebook-audio
 ExecStart=/usr/local/bin/corebook-speakers.sh
-RemainAfterExit=no
 
 [Install]
 WantedBy=multi-user.target
