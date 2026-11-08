@@ -166,7 +166,7 @@ on the real machine.
 - [pacomont/chuwi-corebook-x-left-speaker](https://github.com/pacomont/chuwi-corebook-x-left-speaker) -
   CoreBook X: audio path, AW88298 register values, Force Boost finding and the original daemon
   that `corebook-x/` is a port of (GPL-2.0-or-later).
-- [BenoitAmauryHage] - Who opened this issue and tested every step on his own machine (CoreBook X).
+- [BenoitAmauryHage](https://github.com/avrora13377/Chuwi-CoreBook-Air-Audio-Fix/issues/2) - Who opened this issue and tested every step on his own machine (CoreBook X).
 
 ## License
 
