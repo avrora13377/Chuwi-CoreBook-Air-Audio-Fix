@@ -14,6 +14,19 @@ silent. This is not a volume setting and not a kernel bug — it is a missing ve
 
 ---
 
+## Supported machines
+
+| Machine | Codec subsystem |
+| ------- | --------------- |
+| CoreBook **Air Plus** (Ryzen 5 6600H) | `0x20147054` |
+| CoreBook **X** (Ryzen 5 7430U) | `0x27821221` |
+
+`sudo ./install.sh` detects the machine from the codec's subsystem id and installs the matching
+fix. Unknown machines are refused (override with `FORCE=1 PROFILE=...` at your own risk).
+The CoreBook X profile was tested on one unit (Linux Mint 22.3, kernel 7.0.0-42): left speaker,
+headphone mute and suspend/resume work. More reports from other units are welcome.
+Details for the X are in [corebook-x/README.md](corebook-x/README.md).
+
 ## TL;DR
 
 ```
@@ -122,22 +135,40 @@ See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md). Quick list:
 
 Tested on: CoreBook Air Plus (Ryzen 5 6600H, codec subsystem `0x20147054`), CachyOS,
 PipeWire; a second identical unit. The installer refuses to run if no Conexant codec is
-found and requires `FORCE=1` on a different codec subsystem, because it writes raw vendor
+found and requires `FORCE=1` on an unknown codec subsystem, because it writes raw vendor
 commands to the hardware. Other boards may need their own firmware (`8022Register` in the
 Windows driver's `ext-OEM-common.inf`), PA I²C address (`AMP_ADDR`) and init tables.
 
 Headphones, HDMI audio and microphones are unaffected.
 
+## CoreBook X (experimental)
+
+On the X only the right speaker works out of the box. The left one is an AW88298 amplifier fed
+over I2S by the Conexant codec, and nothing in Linux sets it up. `corebook-x/aw88298-daemon.py`
+configures the amp over I2C, routes the left channel to the codec's extra DAC and keeps both
+volumes in sync. Related kernel work: thesofproject/linux#5687. Read-only self-check:
+`sudo python3 /usr/local/lib/corebook-audio/aw88298-daemon.py --probe`.
+Start with a low volume and read [corebook-x/README.md](corebook-x/README.md) first.
+
+## Tests
+
+`python3 tests/test_corebook_x.py` checks the CoreBook X daemon against a fake codec and a fake
+amplifier (same registers, values and order as the original daemon). It does not replace testing
+on the real machine.
+
 ## Credits
 
 - Reverse-engineered from the vendor driver with lots of framed-I²C packet capturing,
   disassembly and stubbornness.
-- [calyx01](https://github.com/calyx01/Chuwi-CoreBook-Air-Audio-Fix) — fork for the 14"
+- [calyx01](https://github.com/calyx01/Chuwi-CoreBook-Air-Audio-Fix) - fork for the 14"
   CoreBook Air: the DAC stream keep-alive idea, the HDA wire-format vs ioctl packing finding
   and libgpiod v2 handling.
-- [pacomont/chuwi-corebook-x-left-speaker](https://github.com/pacomont/chuwi-corebook-x-left-speaker) —
-  CoreBook X (different machine, different mechanism, endless inspiration).
+- [pacomont/chuwi-corebook-x-left-speaker](https://github.com/pacomont/chuwi-corebook-x-left-speaker) -
+  CoreBook X: audio path, AW88298 register values, Force Boost finding and the original daemon
+  that `corebook-x/` is a port of (GPL-2.0-or-later).
+- [BenoitAmauryHage] - Who opened this issue and tested every step on his own machine (CoreBook X).
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE), **except** `corebook-x/`, which is a derivative of a
+GPL-2.0-or-later work and stays under GPL-2.0-or-later (see [corebook-x/COPYING](corebook-x/COPYING)).

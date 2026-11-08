@@ -1,0 +1,17 @@
+[Unit]
+Description=CoreBook X left speaker: AW88298 smart amp (HDA side-codec workaround)
+Documentation=https://github.com/avrora13377/Chuwi-CoreBook-Air-Audio-Fix
+After=sound.target
+StartLimitIntervalSec=120
+StartLimitBurst=10
+
+[Service]
+Type=simple
+ExecStartPre=-/usr/bin/env modprobe i2c-dev
+ExecStart=/usr/bin/python3 /usr/local/lib/corebook-audio/aw88298-daemon.py
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -17,6 +17,14 @@
 - libgpiod v2 (`--daemonize`) vs v1 handling; a missing `gpioset` is now an error.
 
 ### Added
+- **CoreBook X support (experimental)**: `corebook-x/aw88298-daemon.py`, a port of pacomont's
+  AW88298 left-speaker daemon (GPL-2.0-or-later) with chip-id/subsystem guards, automatic hwdep and
+  I2C bus discovery, direct ioctls and reconnect logic; `--probe` read-only mode; its own systemd
+  unit; offline tests in `tests/`. Confirmed on one CoreBook X (Linux Mint 22.3, kernel 7.0.0-42):
+  left speaker, headphones, suspend/resume, reboot and kernel update.
+- `install.sh` detects the machine (`0x20147054` Air Plus, `0x27821221` CoreBook X) and installs
+  the matching fix; `uninstall.sh` removes either.
+- `diagnose-x.sh`: read-only hardware report for CoreBook X bug reports.
 - `bin/maintain-stream.py` + `corebook-speakers-keepalive.service`: keeps DACs 0x22/0x23
   bound to the live PCM stream (idea and first implementation by calyx01).
   Handles SIGTERM, reconnects on codec errors.
