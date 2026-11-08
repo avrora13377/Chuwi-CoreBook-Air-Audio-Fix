@@ -1,12 +1,12 @@
-# Chuwi CoreBook Air Plus — Internal Speaker Fix for Linux
+# Chuwi CoreBook Air Plus | X — Internal Speaker Fix for Linux
 
 ![laptop](https://img.shields.io/badge/laptop-Chuwi%20CoreBook%20Air%20Plus-blue)
 ![audio](https://img.shields.io/badge/audio-SN6180%20%2B%20SmartPA-orange)
 ![works](https://img.shields.io/badge/status-WORKING-brightgreen)
 
 Makes the **internal speakers work on Linux** on the Chuwi CoreBook Air Plus
-(AMD Ryzen 5 6600H / Conexant Synaptics SN6180 codec). It may also help on other machines
-that use an SN61xx-class codec driving an external SmartPA through the same hidden vendor
+(AMD Ryzen 5 6600H / Conexant Synaptics SN6180 codec) and Chuwi CoreBook X (AMD Ryzen 7 7430U / Conexant Synaptics SN6180 codec).
+It may also help on other machines that use an SN61xx-class codec driving an external SmartPA through the same hidden vendor
 interface (firmware/init data may differ — see *Scope*).
 
 Out of the box Linux plays audio to headphones and HDMI, but the built-in speakers stay
